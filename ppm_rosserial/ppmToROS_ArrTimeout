@@ -1,0 +1,51 @@
+#include <PPMReader.h>
+#include <ros.h>
+#include <std_msgs/Float32MultiArray.h>
+
+ros::NodeHandle nh;
+
+float value[7]={0.0,0.0,0.0,0.0,0.0,0.0};
+
+std_msgs::Float32MultiArray PPM_Ch;
+
+ros::Publisher chatter("PPM", &PPM_Ch);
+
+byte interruptPin = 3;
+int channelAmount = 7;
+PPMReader ppm(interruptPin, channelAmount);
+
+const unsigned long timeoutDuration = 1000;
+unsigned long lastSignalTime = 0;
+
+void setup() {
+  nh.initNode();
+  nh.advertise(chatter);
+}
+
+void loop() {
+    PPM_Ch.data_length = channelAmount;
+    PPM_Ch.data = value;
+    // Check if PPM signal is available
+    bool signalReceived = false;
+    for (int channel = 0; channel < channelAmount; channel++) {
+        int ppmValue = ppm.latestValidChannelValue(channel, 0);
+        if (ppmValue != 0) {
+            signalReceived = true;
+            lastSignalTime = millis();
+            PPM_Ch.data[channel] = ppmValue;
+        } else {
+            PPM_Ch.data[channel] = 0; // If signal lost, send 1100
+        }
+    }
+
+    // Check if timeout occurred
+    if (!signalReceived && (millis() - lastSignalTime > timeoutDuration)) {
+        for (byte channel = 0; channel < channelAmount; ++channel) {
+            PPM_Ch.data[channel] = 0;
+        }
+    }
+
+    chatter.publish(&PPM_Ch);
+    nh.spinOnce();
+    delay(1);
+}
