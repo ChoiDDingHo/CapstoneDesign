@@ -4,20 +4,20 @@
 byte interruptPin = 3;
 byte channelAmount = 7;
 PPMReader ppm(interruptPin, channelAmount);
-float angle = 1100;
-int val = 833;
+float angle = 1900;
+int val = 1833;
 
 const int numReadings = 10;
 int readings[numReadings];
 int readIndex = 0;
-int median = 833;
+int median = 1833;
 Servo servo1;
 Servo servo2;
 Servo servo3;
 Servo servo4;
 
-int servo_max = 1722;
-int servo_min = 833;
+int servo_max = 1833;
+int servo_min = 944;
 
 void setup() {
     Serial.begin(9600);
